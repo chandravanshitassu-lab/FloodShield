@@ -1,0 +1,12 @@
+[
+    {
+        "id": "INV001",
+        "product": "Electronics",
+        "quantity": 3,
+        "unit": "tons",
+        "value": 500000,
+        "location": "Business Area",
+        "risk_level": "High",
+        "risk_score": 82
+    }
+]
