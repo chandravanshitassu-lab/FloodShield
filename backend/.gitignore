@@ -11,3 +11,7 @@ build/
 .mypy_cache/
 .ruff_cache/
 migrations/versions/
+
+# SQLite dev database
+*.db
+*.sqlite3
