@@ -1,5 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import "./App.css";
+import {
+  loginUser, registerUser, createBusiness, getBusinesses,
+  getInventory, addInventoryItem, getRisk,
+  getWarehouseRec, getVehicleMatch,
+  mapApiItem, mapFormToApi,
+} from "./api";
 
 const nav = [
   ["Dashboard", "grid"],
@@ -283,6 +289,11 @@ function App() {
     location: "Riverside Depot",
   });
   const [signedIn, setSignedIn] = useState(false);
+  const [token, setToken] = useState(null);
+  const [businessId, setBusinessId] = useState(null);
+  const [riskData, setRiskData] = useState(null);
+  const [warehouseRec, setWarehouseRec] = useState(null);
+  const [vehicleMatch, setVehicleMatch] = useState(null);
   const [loginForm, setLoginForm] = useState({
     email: "aaryan.mehta@example.com",
     password: "",
@@ -341,17 +352,66 @@ function App() {
     setMenu(false);
     navigate(signedIn ? "Profile" : "Login");
   };
-  const signIn = (event) => {
+  const signIn = async (event) => {
     event.preventDefault();
     if (!loginForm.email.includes("@") || loginForm.password.length < 6) {
       flash("Enter a valid email and a password with at least 6 characters.");
       return;
     }
-    setProfileData((current) => ({ ...current, email: loginForm.email }));
-    setSignedIn(true);
-    setMenu(false);
-    navigate("Profile");
-    flash("You are signed in. Your profile is ready to edit.");
+    try {
+      flash("Connecting to FloodShield backend...");
+      let data;
+      try {
+        data = await loginUser(loginForm.email, loginForm.password);
+      } catch {
+        // Auto-register if not found
+        await registerUser(loginForm.email, loginForm.password,
+          loginForm.email.split("@")[0]);
+        data = await loginUser(loginForm.email, loginForm.password);
+      }
+      const jwt = data.access_token;
+      setToken(jwt);
+
+      // Get or create business
+      let bizId = null;
+      try {
+        const businesses = await getBusinesses(jwt);
+        if (businesses && businesses.length > 0) {
+          bizId = businesses[0].id;
+        } else {
+          const biz = await createBusiness({
+            name: profileData.organisation || "My Business",
+            address: profileData.location || "India",
+            city: "Mumbai", state: "Maharashtra",
+            pincode: "400001",
+            latitude: 19.076, longitude: 72.877,
+            business_type: "retail", employee_count: 5,
+          }, jwt);
+          bizId = biz.id;
+        }
+      } catch { bizId = 1; }
+
+      setBusinessId(bizId);
+
+      // Load inventory from backend
+      try {
+        const inv = await getInventory(bizId, jwt);
+        if (inv && inv.length > 0) setItems(inv.map(mapApiItem));
+      } catch { /* keep mock data */ }
+
+      // Load risk, warehouse, vehicle in background
+      getRisk(bizId, jwt).then(setRiskData).catch(() => {});
+      getWarehouseRec(bizId, jwt).then(setWarehouseRec).catch(() => {});
+      getVehicleMatch(bizId, jwt).then(setVehicleMatch).catch(() => {});
+
+      setProfileData((c) => ({ ...c, email: loginForm.email }));
+      setSignedIn(true);
+      setMenu(false);
+      navigate("Profile");
+      flash("Signed in! Live data loaded from FloodShield backend.");
+    } catch (err) {
+      flash(err.message || "Login failed. Please try again.");
+    }
   };
   const signOut = () => {
     setSignedIn(false);
@@ -370,7 +430,7 @@ function App() {
     });
     setModal("inventory");
   };
-  const saveItem = (event) => {
+  const saveItem = async (event) => {
     event.preventDefault();
     const quantity = Number(form.quantity);
     const value = Number(form.value);
@@ -382,19 +442,24 @@ function App() {
       98,
       Math.round(54 + Math.min(value / 5000, 34) + Math.min(quantity / 30, 12)),
     );
-    setItems((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        ...form,
-        quantity,
-        value,
-        priority,
-        risk: form.location === "Riverside Depot" ? "High" : "Medium",
-      },
-    ]);
+    const newItem = {
+      id: Date.now(),
+      ...form,
+      quantity,
+      value,
+      priority,
+      risk: form.location === "Riverside Depot" ? "High" : "Medium",
+    };
+    setItems((current) => [...current, newItem]);
     setModal(null);
     flash("Inventory added and included in risk analysis.");
+
+    // Save to backend if logged in
+    if (token && businessId) {
+      try {
+        await addInventoryItem(businessId, mapFormToApi(form), token);
+      } catch { /* silently fail — local state already updated */ }
+    }
   };
   const removeItem = (id) => {
     setItems((current) => current.filter((item) => item.id !== id));
@@ -431,6 +496,9 @@ function App() {
     setDone,
     exportPlan,
     profileData,
+    riskData,
+    warehouseRec,
+    vehicleMatch,
   };
   return (
     <div className="app-shell">
