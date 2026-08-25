@@ -1,110 +1,61 @@
-import json
-import os
+"""
+Storage Engine — Member 4: Maps & Logistics
+Finds the nearest flood-safe warehouse for a business using haversine distance.
+"""
+from __future__ import annotations
+
+import math
+from typing import Optional
+
+from sqlalchemy.orm import Session
+
+from app.models.business import Business
+from app.models.warehouse import Warehouse, WarehouseStatus
 
 
-def calculate_storage_score(
-    flood_risk,
-    distance,
-    available_capacity,
-    required_capacity
-):
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Return great-circle distance in kilometres between two GPS points."""
+    R = 6371.0
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def find_safe_warehouse(
+    db: Session,
+    business: Business,
+    required_weight_tons: Optional[float] = None,
+) -> Optional[Warehouse]:
     """
-    Calculate warehouse suitability score.
-
-    Lower score = better warehouse.
+    Return the nearest flood-safe warehouse that can accommodate the
+    business's inventory weight.  Returns None when no suitable warehouse
+    is found or the business has no GPS coordinates.
     """
+    if business.latitude is None or business.longitude is None:
+        return None
 
-    capacity_utilization = (
-        required_capacity / available_capacity
-    ) * 100
-
-    score = (
-        flood_risk * 0.50
-        + distance * 0.30
-        + capacity_utilization * 0.20
+    safe_statuses = {WarehouseStatus.AVAILABLE, WarehouseStatus.PARTIALLY_FULL}
+    query = db.query(Warehouse).filter(
+        Warehouse.is_flood_safe.is_(True),
+        Warehouse.status.in_(safe_statuses),
     )
 
-    return round(score, 2)
-
-
-def find_best_storage(warehouses, required_capacity):
-    """
-    Find the best available warehouse.
-    """
-
-    suitable_warehouses = []
-
-    for warehouse in warehouses:
-
-        if not warehouse["available"]:
-            continue
-
-        if warehouse["available_capacity"] < required_capacity:
-            continue
-
-        warehouse["score"] = calculate_storage_score(
-            warehouse["flood_risk"],
-            warehouse["distance"],
-            warehouse["available_capacity"],
-            required_capacity
+    if required_weight_tons:
+        query = query.filter(
+            (Warehouse.max_weight_tons == None) |  # noqa: E711
+            (Warehouse.max_weight_tons >= required_weight_tons)
         )
 
-        suitable_warehouses.append(warehouse)
-
-    if not suitable_warehouses:
+    warehouses = query.all()
+    if not warehouses:
         return None
 
     return min(
-        suitable_warehouses,
-        key=lambda warehouse: warehouse["score"]
-    )
-
-
-def load_warehouses():
-    """
-    Load warehouse information from warehouses.json.
-    """
-
-    current_file = os.path.dirname(os.path.abspath(__file__))
-
-    data_file = os.path.join(
-        current_file,
-        "..",
-        "data",
-        "warehouses.json"
-    )
-
-    with open(data_file, "r") as file:
-        return json.load(file)
-
-
-if __name__ == "__main__":
-
-    required_capacity = 3
-
-    warehouses = load_warehouses()
-
-    best_warehouse = find_best_storage(
         warehouses,
-        required_capacity
+        key=lambda wh: haversine_km(
+            business.latitude, business.longitude,
+            wh.latitude, wh.longitude,
+        ),
     )
-
-    print("Storage Analysis")
-    print("--------------------")
-
-    for warehouse in warehouses:
-        if "score" in warehouse:
-            print(
-                f'{warehouse["id"]} → '
-                f'Score: {warehouse["score"]}'
-            )
-
-    print("--------------------")
-
-    if best_warehouse:
-        print(
-            f'Recommended Warehouse: '
-            f'{best_warehouse["id"]}'
-        )
-    else:
-        print("No suitable warehouse found.")
