@@ -106,7 +106,14 @@ def create_app() -> FastAPI:
     if settings.ENVIRONMENT == "production":
         app.add_middleware(
             TrustedHostMiddleware,
-            allowed_hosts=["floodshield.in", "*.floodshield.in"],
+       allowed_hosts=[
+            "floodshield-backend.onrender.com",
+            "floodshield.in",
+            "www.floodshield.in",
+            "*.floodshield.in",
+            "localhost",
+            "127.0.0.1", 
+        ],
         )
 
     # ── Exception Handlers ───────────────────────────────────────────────────
