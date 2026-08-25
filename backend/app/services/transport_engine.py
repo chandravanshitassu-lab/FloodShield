@@ -1,110 +1,48 @@
-import json
-import os
+"""
+Transport Engine — Member 4: Maps & Logistics
+Finds the nearest available vehicle for a business using haversine distance.
+"""
+from __future__ import annotations
+
+from typing import Optional
+
+from sqlalchemy.orm import Session
+
+from app.models.business import Business
+from app.models.vehicle import Vehicle, VehicleStatus
+from app.services.storage_engine import haversine_km
 
 
-def calculate_transport_score(
-    distance,
-    eta,
-    capacity,
-    required_payload
-):
+def find_best_transport(
+    db: Session,
+    business: Business,
+    required_weight_tons: Optional[float] = None,
+) -> Optional[Vehicle]:
     """
-    Calculate vehicle suitability score.
-
-    Lower score = better vehicle.
+    Return the nearest AVAILABLE vehicle whose payload capacity meets the
+    business's logistics requirement.  Returns None when no qualifying
+    vehicle is found or the business has no geocoordinates.
     """
+    if business.latitude is None or business.longitude is None:
+        return None
 
-    capacity_utilization = (
-        required_payload / capacity
-    ) * 100
-
-    score = (
-        eta * 0.40
-        + distance * 0.30
-        + capacity_utilization * 0.30
+    query = db.query(Vehicle).filter(
+        Vehicle.status == VehicleStatus.AVAILABLE,
+        Vehicle.current_latitude != None,   # noqa: E711
+        Vehicle.current_longitude != None,  # noqa: E711
     )
 
-    return round(score, 2)
+    if required_weight_tons:
+        query = query.filter(Vehicle.payload_capacity_tons >= required_weight_tons)
 
-
-def find_best_vehicle(vehicles, required_payload):
-    """
-    Find the best available vehicle.
-    """
-
-    suitable_vehicles = []
-
-    for vehicle in vehicles:
-
-        if not vehicle["available"]:
-            continue
-
-        if vehicle["capacity"] < required_payload:
-            continue
-
-        vehicle["score"] = calculate_transport_score(
-            vehicle["distance"],
-            vehicle["eta"],
-            vehicle["capacity"],
-            required_payload
-        )
-
-        suitable_vehicles.append(vehicle)
-
-    if not suitable_vehicles:
+    vehicles = query.all()
+    if not vehicles:
         return None
 
     return min(
-        suitable_vehicles,
-        key=lambda vehicle: vehicle["score"]
-    )
-
-
-def load_vehicles():
-    """
-    Load vehicle information from vehicles.json.
-    """
-
-    current_file = os.path.dirname(os.path.abspath(__file__))
-
-    data_file = os.path.join(
-        current_file,
-        "..",
-        "data",
-        "vehicles.json"
-    )
-
-    with open(data_file, "r") as file:
-        return json.load(file)
-
-
-if __name__ == "__main__":
-
-    required_payload = 3
-
-    vehicles = load_vehicles()
-
-    best_vehicle = find_best_vehicle(
         vehicles,
-        required_payload
+        key=lambda v: haversine_km(
+            business.latitude, business.longitude,
+            v.current_latitude, v.current_longitude,
+        ),
     )
-
-    print("Transport Analysis")
-    print("--------------------")
-
-    for vehicle in vehicles:
-        if "score" in vehicle:
-            print(
-                f'{vehicle["id"]} → '
-                f'Score: {vehicle["score"]}'
-            )
-
-    print("--------------------")
-
-    if best_vehicle:
-        print(
-            f'Recommended Vehicle: '
-            f'{best_vehicle["id"]}'
-        )
-    else:
-        print("No suitable vehicle found.")
