@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FloodShield | Inventory Protection</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- ================= NAVBAR ================= -->
+
+    <header class="navbar">
+
+        <div class="logo">
+            🌊 FloodShield
+        </div>
+
+        <div class="status" id="backendStatusWrap">
+            <span class="dot"></span>
+            <span id="backendStatus">Checking backend...</span>
+        </div>
+
+    </header>
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <main class="container">
+
+
+        <!-- ================= HERO ================= -->
+
+        <section class="hero">
+
+            <div>
+
+                <p class="tag">
+                    DISASTER MANAGEMENT
+                </p>
+
+                <h1>
+                    Protect Your Inventory<br>
+                    Before the Flood Hits.
+                </h1>
+
+                <p class="subtitle">
+                    AI-assisted inventory prioritization helps businesses
+                    decide what stock should be moved first during floods.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= CONTROL ================= -->
+
+        <section class="control-card">
+
+            <div>
+
+                <label for="riskLevel">
+                    Flood Risk Level
+                </label>
+
+                <select id="riskLevel" class="risk-high">
+
+                    <option value="low">
+                        Low
+                    </option>
+
+                    <option value="medium">
+                        Medium
+                    </option>
+
+                    <option value="high" selected>
+                        High
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button id="analyzeBtn">
+                Analyze Inventory
+            </button>
+
+        </section>
+
+
+        <!-- ================= SUMMARY ================= -->
+
+        <section id="summary" class="summary hidden">
+
+
+            <div class="summary-card">
+
+                <span>
+                    Total Products
+                </span>
+
+                <strong id="totalProducts">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="summary-card critical">
+
+                <span>
+                    Critical
+                </span>
+
+                <strong id="criticalCount">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="summary-card high">
+
+                <span>
+                    High Priority
+                </span>
+
+                <strong id="highCount">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="summary-card value">
+
+                <span>
+                    Inventory Value
+                </span>
+
+                <strong id="inventoryValue">
+                    $0
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= RESULTS ================= -->
+
+        <section class="results">
+
+
+            <!-- Section Header -->
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="tag">
+                        PRIORITIZATION RESULT
+                    </p>
+
+                    <h2>
+                        Inventory Protection Plan
+                    </h2>
+
+                </div>
+
+
+                <span id="riskBadge" class="risk-badge">
+                    AWAITING ANALYSIS
+                </span>
+
+            </div>
+
+
+            <!-- Loading -->
+
+            <div id="loading" class="loading hidden">
+
+                Analyzing inventory...
+
+            </div>
+
+
+            <!-- Error -->
+
+            <div id="error" class="error hidden"></div>
+
+
+            <!-- Inventory Table -->
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Priority
+                            </th>
+
+                            <th>
+                                Product
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                Quantity
+                            </th>
+
+                            <th>
+                                Inventory Value
+                            </th>
+
+                            <th>
+                                Vulnerability
+                            </th>
+
+                            <th>
+                                Score
+                            </th>
+
+                            <th>
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="inventoryTable">
+
+                        <!-- JavaScript will insert products here -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer>
+
+        <p>
+            FloodShield © 2026 | Smart Flood Inventory Protection
+        </p>
+
+    </footer>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>
