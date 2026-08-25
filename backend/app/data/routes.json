@@ -1,0 +1,47 @@
+[
+    {
+        "id": "R01",
+        "start": "Business Area",
+        "destination": "W01",
+        "distance": 5,
+        "eta": 20,
+        "flood_risk": 20,
+        "blockage": 10,
+        "traffic": 30,
+        "coordinates": [
+            [25.6100, 85.1100],
+            [25.6150, 85.1150],
+            [25.6200, 85.1200]
+        ]
+    },
+    {
+        "id": "R02",
+        "start": "Business Area",
+        "destination": "W01",
+        "distance": 3,
+        "eta": 15,
+        "flood_risk": 80,
+        "blockage": 60,
+        "traffic": 20,
+        "coordinates": [
+            [25.6100, 85.1100],
+            [25.6120, 85.1160],
+            [25.6200, 85.1200]
+        ]
+    },
+    {
+        "id": "R03",
+        "start": "Business Area",
+        "destination": "W01",
+        "distance": 7,
+        "eta": 30,
+        "flood_risk": 10,
+        "blockage": 5,
+        "traffic": 40,
+        "coordinates": [
+            [25.6100, 85.1100],
+            [25.6180, 85.1120],
+            [25.6200, 85.1200]
+        ]
+    }
+]

@@ -1,0 +1,38 @@
+[
+    {
+        "id": "W01",
+        "name": "Safe Warehouse A",
+        "location": "North Zone",
+        "latitude": 25.6200,
+        "longitude": 85.1200,
+        "distance": 4,
+        "flood_risk": 15,
+        "available_capacity": 8,
+        "current_occupancy": 2,
+        "available": true
+    },
+    {
+        "id": "W02",
+        "name": "Warehouse B",
+        "location": "Central Zone",
+        "latitude": 25.6250,
+        "longitude": 85.1250,
+        "distance": 2,
+        "flood_risk": 75,
+        "available_capacity": 10,
+        "current_occupancy": 3,
+        "available": true
+    },
+    {
+        "id": "W03",
+        "name": "Warehouse C",
+        "location": "South Zone",
+        "latitude": 25.6050,
+        "longitude": 85.1150,
+        "distance": 6,
+        "flood_risk": 25,
+        "available_capacity": 3,
+        "current_occupancy": 7,
+        "available": true
+    }
+]

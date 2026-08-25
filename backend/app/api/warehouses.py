@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.models.business import Business
 from app.models.warehouse import Warehouse
 from app.models.user import User, UserRole
 from app.schemas.warehouse import (
@@ -16,6 +17,7 @@ from app.schemas.warehouse import (
     WarehouseResponse,
     WarehouseListResponse,
 )
+from app.services.storage_engine import find_safe_warehouse
 from app.utils.dependencies import get_current_active_user, require_roles
 from app.utils.exceptions import NotFoundError
 
@@ -67,6 +69,27 @@ def create_warehouse(
     db.commit()
     db.refresh(wh)
     return wh
+
+
+@router.get(
+    "/recommend/{business_id}",
+    response_model=WarehouseResponse | None,
+    summary="Recommend nearest safe warehouse for a business",
+)
+def recommend_safe_warehouse(
+    business_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    """
+    Return the closest flood-safe warehouse with available capacity for the
+    given business. Returns ``null`` when no qualifying warehouse is found or
+    the business has no geocoordinates on record.
+    """
+    biz = db.get(Business, business_id)
+    if not biz:
+        raise NotFoundError("Business", business_id)
+    return find_safe_warehouse(db, biz)
 
 
 @router.get("/{warehouse_id}", response_model=WarehouseResponse, summary="Get warehouse by ID")

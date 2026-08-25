@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.models.business import Business
 from app.models.vehicle import Vehicle
 from app.models.user import User, UserRole
 from app.schemas.vehicle import (
@@ -17,6 +18,7 @@ from app.schemas.vehicle import (
     VehicleResponse,
     VehicleListResponse,
 )
+from app.services.transport_engine import find_best_transport
 from app.utils.dependencies import get_current_active_user, require_roles
 from app.utils.exceptions import NotFoundError, ConflictError
 
@@ -75,6 +77,27 @@ def create_vehicle(
     db.commit()
     db.refresh(v)
     return v
+
+
+@router.get(
+    "/match/{business_id}",
+    response_model=VehicleResponse | None,
+    summary="Match best available vehicle for a business",
+)
+def match_best_vehicle(
+    business_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    """
+    Return the closest available vehicle whose payload capacity meets the
+    business's logistics requirement. Returns ``null`` when no qualifying
+    vehicle is found or the business has no geocoordinates on record.
+    """
+    biz = db.get(Business, business_id)
+    if not biz:
+        raise NotFoundError("Business", business_id)
+    return find_best_transport(db, biz)
 
 
 @router.get("/{vehicle_id}", response_model=VehicleResponse, summary="Get vehicle by ID")
