@@ -31,8 +31,9 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
-
+    # ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
+     
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173,https://flood-shield-five.vercel.app"
     @property
     def allowed_origins_list(self) -> list[str]:
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",")]
