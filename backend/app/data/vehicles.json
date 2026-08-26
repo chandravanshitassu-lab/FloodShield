@@ -1,0 +1,29 @@
+[
+    {
+        "id": "V01",
+        "type": "Truck",
+        "capacity": 5,
+        "location": "Business Area",
+        "distance": 2,
+        "eta": 20,
+        "available": true
+    },
+    {
+        "id": "V02",
+        "type": "Large Truck",
+        "capacity": 8,
+        "location": "Warehouse Area",
+        "distance": 6,
+        "eta": 45,
+        "available": true
+    },
+    {
+        "id": "V03",
+        "type": "Mini Truck",
+        "capacity": 2,
+        "location": "Business Area",
+        "distance": 1,
+        "eta": 10,
+        "available": true
+    }
+]
